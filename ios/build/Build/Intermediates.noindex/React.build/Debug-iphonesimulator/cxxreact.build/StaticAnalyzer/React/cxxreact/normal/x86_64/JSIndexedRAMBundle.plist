@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+ <key>clang_version</key>
+<string>Apple clang version 13.1.6 (clang-1316.0.21.2.3)</string>
+ <key>diagnostics</key>
+ <array>
+  <dict>
+   <key>path</key>
+   <array>
+    <dict>
+     <key>kind</key><string>event</string>
+     <key>location</key>
+     <dict>
+      <key>line</key><integer>362</integer>
+      <key>col</key><integer>10</integer>
+      <key>file</key><integer>0</integer>
+     </dict>
+     <key>depth</key><integer>0</integer>
+     <key>extended_message</key>
+     <string>Forwarding reference passed to std::move(), which may unexpectedly cause lvalues to be moved; use std::forward() instead</string>
+     <key>message</key>
+     <string>Forwarding reference passed to std::move(), which may unexpectedly cause lvalues to be moved; use std::forward() instead</string>
+    </dict>
+   </array>
+   <key>description</key><string>Forwarding reference passed to std::move(), which may unexpectedly cause lvalues to be moved; use std::forward() instead</string>
+   <key>category</key><string>C++ move semantics</string>
+   <key>type</key><string>Clang-Tidy [bugprone-move-forwarding-reference]</string>
+   <key>check_name</key><string>bugprone-move-forwarding-reference</string>
+   <!-- This hash is experimental and going to change! -->
+   <key>issue_hash_content_of_line_in_context</key><string>d9916209d4aae2cb8d9e444ce99325a7</string>
+  <key>location</key>
+  <dict>
+   <key>line</key><integer>362</integer>
+   <key>col</key><integer>10</integer>
+   <key>file</key><integer>0</integer>
+  </dict>
+  <key>ExecutedLines</key>
+  <dict>
+  </dict>
+  </dict>
+ </array>
+ <key>files</key>
+ <array>
+  <string>/Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/node_modules/react-native/third-party/folly-2016.10.31.00/folly/Memory.h</string>
+ </array>
+</dict>
+</plist>

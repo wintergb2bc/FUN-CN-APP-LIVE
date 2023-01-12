@@ -1,0 +1,24 @@
+# Uncomment the next line to define a global platform for your project
+# platform :ios, '9.0'
+
+target 'UMComponent' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  #use_frameworks!
+  pod 'PiwikPROSDK'
+
+  # Pods for UMComponent
+  
+  pod 'RNShare', :path => '../node_modules/react-native-share'
+
+  pod 'react-native-image-picker', :path => '../node_modules/react-native-image-picker'
+
+  pod 'react-native-heic-converter', :path => '../node_modules/react-native-heic-converter'
+
+  pod 'react-native-viewpager', :path => '../node_modules/@react-native-community/viewpager'
+
+  target 'UMComponentTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+
+end

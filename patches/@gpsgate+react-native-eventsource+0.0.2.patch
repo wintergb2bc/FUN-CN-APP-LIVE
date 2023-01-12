@@ -1,0 +1,37 @@
+diff --git a/node_modules/@gpsgate/react-native-eventsource/README.md b/node_modules/@gpsgate/react-native-eventsource/README.md
+index 06438bd..34dbc5a 100644
+--- a/node_modules/@gpsgate/react-native-eventsource/README.md
++++ b/node_modules/@gpsgate/react-native-eventsource/README.md
+@@ -25,3 +25,8 @@ eventSource.onerror = err => {
+   console.error(err);
+ };
+ ```
++### patch-package-command
++```
++npx patch-package @gpsgate/react-native-eventsource --exclude "build[^\.].+|.+\.iml|package\.json"
++```
++
+diff --git a/node_modules/@gpsgate/react-native-eventsource/android/src/main/java/org/kaazing/net/sse/impl/SseEventStream.java b/node_modules/@gpsgate/react-native-eventsource/android/src/main/java/org/kaazing/net/sse/impl/SseEventStream.java
+index d08b743..e273a4c 100755
+--- a/node_modules/@gpsgate/react-native-eventsource/android/src/main/java/org/kaazing/net/sse/impl/SseEventStream.java
++++ b/node_modules/@gpsgate/react-native-eventsource/android/src/main/java/org/kaazing/net/sse/impl/SseEventStream.java
+@@ -119,6 +119,7 @@ public class SseEventStream {
+         try {
+             HttpURI uri = new HttpURI(this.sseLocation);
+             sseSource = new HttpRequest(Method.GET, uri, true);
++            sseSource.setHeader("Accept","text/event-stream"); //要加這個header 否則bti會返回404
+             sseHandler.processOpen(sseSource);
+ 
+             if (!reconnected.get()) {
+diff --git a/node_modules/@gpsgate/react-native-eventsource/src/EventSource.js b/node_modules/@gpsgate/react-native-eventsource/src/EventSource.js
+index 5280382..604cf34 100644
+--- a/node_modules/@gpsgate/react-native-eventsource/src/EventSource.js
++++ b/node_modules/@gpsgate/react-native-eventsource/src/EventSource.js
+@@ -57,6 +57,7 @@ class EventSource extends EventSourceBase {
+         var event = new EventSourceEvent(ev.type, {
+           data: ev.message || ev.data
+         });
++        //console.log('===DeviceEventEmitter eventsourceEvent',ev.id,JSON.parse(JSON.stringify(event)));
+         if( ev.type === 'message' && this.onmessage ) this.onmessage(event);
+         this.dispatchEvent(event);
+       }),

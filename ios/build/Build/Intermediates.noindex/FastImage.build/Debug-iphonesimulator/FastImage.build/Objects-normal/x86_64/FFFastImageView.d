@@ -1,0 +1,37 @@
+dependencies: \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/node_modules/react-native-fast-image/ios/FastImage/FFFastImageView.m \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/node_modules/react-native-fast-image/ios/FastImage/FFFastImageView.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDAnimatedImageView+WebCache.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDAnimatedImageView.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageCompat.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDAnimatedImage.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDImageCoder.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/NSData+ImageContentType.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageManager.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageOperation.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDImageCacheDefine.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageDefine.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDImageLoader.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDImageTransformer.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/UIImage+Transform.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageCacheKeyFilter.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageCacheSerializer.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageOptionsProcessor.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageDownloader.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageDownloaderConfig.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/SDWebImage/SDWebImageDownloaderRequestModifier.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTComponent.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTResizeMode.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTConvert.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTAnimationType.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTBorderStyle.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTDefines.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTLog.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTAssert.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTUtils.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTPointerEvents.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/React/RCTTextDecorationLineType.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/yoga/Yoga.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/yoga/YGEnums.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products/Debug-iphonesimulator/include/yoga/YGMacros.h \
+  /Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/node_modules/react-native-fast-image/ios/FastImage/FFFastImageSource.h

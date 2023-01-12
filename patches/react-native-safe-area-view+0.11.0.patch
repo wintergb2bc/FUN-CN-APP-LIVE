@@ -1,0 +1,38 @@
+diff --git a/node_modules/react-native-safe-area-view/index.js b/node_modules/react-native-safe-area-view/index.js
+index ee91466..526aef6 100644
+--- a/node_modules/react-native-safe-area-view/index.js
++++ b/node_modules/react-native-safe-area-view/index.js
+@@ -19,6 +19,13 @@ const XSMAX_HEIGHT = 896;
+ const PAD_WIDTH = 768;
+ const PAD_HEIGHT = 1024;
+ 
++const IPHONE12_H = 844;
++const IPHONE12_Max = 926;
++const IPHONE12_Mini = 780;
++
++const IPHONE14_Pro = 852;
++const IPHONE14_Max = 932;
++
+ const { height: D_HEIGHT, width: D_WIDTH } = Dimensions.get('window');
+ 
+ const { PlatformConstants = {} } = NativeModules;
+@@ -32,7 +39,9 @@ const isIPhoneX = (() => {
+     ((D_HEIGHT === X_HEIGHT && D_WIDTH === X_WIDTH) ||
+       (D_HEIGHT === X_WIDTH && D_WIDTH === X_HEIGHT)) ||
+     ((D_HEIGHT === XSMAX_HEIGHT && D_WIDTH === XSMAX_WIDTH) ||
+-        (D_HEIGHT === XSMAX_WIDTH && D_WIDTH === XSMAX_HEIGHT))
++        (D_HEIGHT === XSMAX_WIDTH && D_WIDTH === XSMAX_HEIGHT)) ||
++        (D_HEIGHT === IPHONE12_H) || (D_HEIGHT === IPHONE12_Max) || (D_HEIGHT === IPHONE12_Mini) ||
++        (D_HEIGHT === IPHONE14_Pro) || (D_HEIGHT === IPHONE14_Max)
+   );
+ })();
+ 
+@@ -72,7 +81,7 @@ const statusBarHeight = isLandscape => {
+     }
+   }
+ 
+-  if (isIPhoneX) {
++  if (true) {
+     return isLandscape ? 0 : 44;
+   }
+ 

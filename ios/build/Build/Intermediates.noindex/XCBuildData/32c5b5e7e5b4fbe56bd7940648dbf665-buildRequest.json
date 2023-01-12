@@ -1,0 +1,75 @@
+{
+  "_buildCommand2" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildOnly"
+  },
+  "buildCommand" : "build",
+  "configuredTargets" : [
+    {
+      "guid" : "535a87cf961eaa4598f0da6bd78ce6814fa2d43570a292f483963370024974b6"
+    },
+    {
+      "guid" : "df712c183d2a25ec3a7dd22ec631badc7ceb6b36bcfc2fb90f69ac96de4975d6"
+    },
+    {
+      "guid" : "df712c183d2a25ec3a7dd22ec631badcb8656357b4e3c9cbdedf6d0daf7e7987"
+    }
+  ],
+  "containerPath" : "/Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/UMComponent.xcworkspace",
+  "continueBuildingAfterErrors" : false,
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "x86_64",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : false,
+      "platform" : "iphonesimulator",
+      "sdk" : "iphonesimulator15.4",
+      "sdkVariant" : "iphonesimulator",
+      "supportedArchitectures" : [
+        "x86_64"
+      ],
+      "targetArchitecture" : "x86_64"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Products",
+      "derivedDataPath" : "/Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build",
+      "indexDataStoreFolderPath" : "/Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Index/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Index/PrecompiledHeaders",
+      "pchPath" : "/Users/luguibin/Desktop/LIVE/F1-M1-APP-Prod/ios/build/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ACTION" : "build",
+          "ASSETCATALOG_FILTER_FOR_DEVICE_MODEL" : "iPhone10,6",
+          "ASSETCATALOG_FILTER_FOR_DEVICE_OS_VERSION" : "15.4",
+          "BUILD_ACTIVE_RESOURCES_ONLY" : "YES",
+          "ENABLE_PREVIEWS" : "NO",
+          "TARGET_DEVICE_IDENTIFIER" : "85A798AD-0FE6-4BCC-8C25-59B8E8C0FEF7",
+          "TARGET_DEVICE_MODEL" : "iPhone10,6",
+          "TARGET_DEVICE_OS_VERSION" : "15.4",
+          "TARGET_DEVICE_PLATFORM_NAME" : "iphonesimulator"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "launch",
+  "schemeCommand2" : "launch",
+  "shouldCollectMetrics" : false,
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : false
+}

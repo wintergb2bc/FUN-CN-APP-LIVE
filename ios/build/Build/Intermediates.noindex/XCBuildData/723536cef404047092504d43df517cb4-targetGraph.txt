@@ -1,0 +1,91 @@
+Target dependency graph (42 targets)
+yoga in React, no dependencies
+jsinspector in React, no dependencies
+privatedata in React, no dependencies
+double-conversion in React, no dependencies
+third-party in React, depends on:
+double-conversion in React (explicit)
+jschelpers in React, depends on:
+privatedata in React (explicit)
+third-party in React (explicit)
+cxxreact in React, depends on:
+jsinspector in React (explicit)
+privatedata in React (explicit)
+jschelpers in React (explicit)
+React in React, depends on:
+yoga in React (explicit)
+cxxreact in React (explicit)
+double-conversion in React (implicit dependency via file 'libdouble-conversion.a' in build phase 'Link Binary')
+jschelpers in React (implicit dependency via file 'libjschelpers.a' in build phase 'Link Binary')
+third-party in React (implicit dependency via file 'libthird-party.a' in build phase 'Link Binary')
+RNImagePicker in RNImagePicker, no dependencies
+SDWebImage static in SDWebImage, no dependencies
+FastImage in FastImage, depends on:
+SDWebImage static in SDWebImage (explicit)
+ReactNativeWebp in ReactNativeWebp, no dependencies
+ReactNativeFingerprintScanner in ReactNativeFingerprintScanner, no dependencies
+RNDeviceInfo in RNDeviceInfo, no dependencies
+RCTCameraRoll in RCTCameraRoll, no dependencies
+CodePush in CodePush, no dependencies
+RCTVideo in RCTVideo, no dependencies
+ART in ART, no dependencies
+RCTAnimation in RCTAnimation, no dependencies
+RCTActionSheet in RCTActionSheet, no dependencies
+RNHeicConverter in RNHeicConverter, no dependencies
+RCTGeolocation in RCTGeolocation, no dependencies
+RCTImage in RCTImage, no dependencies
+RCTLinking in RCTLinking, no dependencies
+RCTNetwork in RCTNetwork, no dependencies
+RCTSettings in RCTSettings, no dependencies
+RCTText in RCTText, no dependencies
+RCTVibration in RCTVibration, no dependencies
+fishhook in RCTWebSocket, no dependencies
+RCTWebSocket in RCTWebSocket, depends on:
+fishhook in RCTWebSocket (explicit)
+RNViewShot in RNViewShot, no dependencies
+RCTOrientation in RCTOrientation, no dependencies
+SplashScreen in SplashScreen, no dependencies
+BVLinearGradient in BVLinearGradient, no dependencies
+RNSVG in RNSVG, no dependencies
+RNCWebView in RNCWebView, no dependencies
+PiwikPROSDK in Pods, no dependencies
+Pods-UMComponent in Pods, depends on:
+PiwikPROSDK in Pods (explicit)
+RNShare in RNShare, no dependencies
+UMComponent in UMComponent, depends on:
+RNImagePicker in RNImagePicker (explicit)
+FastImage in FastImage (implicit dependency via file 'libFastImage.a' in build phase 'Link Binary')
+ReactNativeWebp in ReactNativeWebp (implicit dependency via file 'libReactNativeWebp.a' in build phase 'Link Binary')
+ReactNativeFingerprintScanner in ReactNativeFingerprintScanner (implicit dependency via file 'libReactNativeFingerprintScanner.a' in build phase 'Link Binary')
+RNDeviceInfo in RNDeviceInfo (implicit dependency via file 'libRNDeviceInfo.a' in build phase 'Link Binary')
+RCTCameraRoll in RCTCameraRoll (implicit dependency via file 'libRCTCameraRoll.a' in build phase 'Link Binary')
+CodePush in CodePush (implicit dependency via file 'libCodePush.a' in build phase 'Link Binary')
+RCTVideo in RCTVideo (implicit dependency via file 'libRCTVideo.a' in build phase 'Link Binary')
+ART in ART (implicit dependency via file 'libART.a' in build phase 'Link Binary')
+React in React (implicit dependency via file 'libReact.a' in build phase 'Link Binary')
+RCTAnimation in RCTAnimation (implicit dependency via file 'libRCTAnimation.a' in build phase 'Link Binary')
+RCTActionSheet in RCTActionSheet (implicit dependency via file 'libRCTActionSheet.a' in build phase 'Link Binary')
+RNHeicConverter in RNHeicConverter (implicit dependency via file 'libRNHeicConverter.a' in build phase 'Link Binary')
+RCTGeolocation in RCTGeolocation (implicit dependency via file 'libRCTGeolocation.a' in build phase 'Link Binary')
+RCTImage in RCTImage (implicit dependency via file 'libRCTImage.a' in build phase 'Link Binary')
+RCTLinking in RCTLinking (implicit dependency via file 'libRCTLinking.a' in build phase 'Link Binary')
+RCTNetwork in RCTNetwork (implicit dependency via file 'libRCTNetwork.a' in build phase 'Link Binary')
+RCTSettings in RCTSettings (implicit dependency via file 'libRCTSettings.a' in build phase 'Link Binary')
+RCTText in RCTText (implicit dependency via file 'libRCTText.a' in build phase 'Link Binary')
+RCTVibration in RCTVibration (implicit dependency via file 'libRCTVibration.a' in build phase 'Link Binary')
+RCTWebSocket in RCTWebSocket (implicit dependency via file 'libRCTWebSocket.a' in build phase 'Link Binary')
+RNViewShot in RNViewShot (implicit dependency via file 'libRNViewShot.a' in build phase 'Link Binary')
+RCTOrientation in RCTOrientation (implicit dependency via file 'libRCTOrientation.a' in build phase 'Link Binary')
+SplashScreen in SplashScreen (implicit dependency via file 'libSplashScreen.a' in build phase 'Link Binary')
+BVLinearGradient in BVLinearGradient (implicit dependency via file 'libBVLinearGradient.a' in build phase 'Link Binary')
+RNSVG in RNSVG (implicit dependency via file 'libRNSVG.a' in build phase 'Link Binary')
+RNCWebView in RNCWebView (implicit dependency via file 'libRNCWebView.a' in build phase 'Link Binary')
+Pods-UMComponent in Pods (implicit dependency via file 'libPods-UMComponent.a' in build phase 'Link Binary')
+RNShare in RNShare (implicit dependency via file 'libRNShare.a' in build phase 'Link Binary')
+Pods-UMComponentTests in Pods, depends on:
+Pods-UMComponent in Pods (explicit)
+UMComponentTests in UMComponent, depends on:
+UMComponent in UMComponent (explicit)
+RCTWebSocket in RCTWebSocket (implicit dependency via file 'libRCTWebSocket.a' in build phase 'Link Binary')
+React in React (implicit dependency via file 'libReact.a' in build phase 'Link Binary')
+Pods-UMComponentTests in Pods (implicit dependency via file 'libPods-UMComponentTests.a' in build phase 'Link Binary')

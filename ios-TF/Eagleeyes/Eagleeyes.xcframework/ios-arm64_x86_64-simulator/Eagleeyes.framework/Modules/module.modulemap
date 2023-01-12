@@ -1,0 +1,6 @@
+framework module Eagleeyes {
+  umbrella header "Eagleeyes.h"
+
+  export *
+  module * { export * }
+}

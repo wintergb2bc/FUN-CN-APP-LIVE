@@ -1,0 +1,538 @@
+diff --git a/node_modules/react-native/Libraries/fishhook/fishhook.c b/node_modules/react-native/Libraries/fishhook/fishhook.c
+index 205ee82..fb41e8e 100755
+--- a/node_modules/react-native/Libraries/fishhook/fishhook.c
++++ b/node_modules/react-native/Libraries/fishhook/fishhook.c
+@@ -21,15 +21,20 @@
+ // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-#import "fishhook.h"
++#include "fishhook.h"
+
+-#import <dlfcn.h>
+-#import <stdlib.h>
+-#import <string.h>
+-#import <sys/types.h>
+-#import <mach-o/dyld.h>
+-#import <mach-o/loader.h>
+-#import <mach-o/nlist.h>
++#include <dlfcn.h>
++#include <stdbool.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/mman.h>
++#include <sys/types.h>
++#include <mach/mach.h>
++#include <mach/vm_map.h>
++#include <mach/vm_region.h>
++#include <mach-o/dyld.h>
++#include <mach-o/loader.h>
++#include <mach-o/nlist.h>
+
+ #ifdef __LP64__
+ typedef struct mach_header_64 mach_header_t;
+@@ -76,6 +81,36 @@ static int prepend_rebindings(struct rebindings_entry **rebindings_head,
+   return 0;
+ }
+
++#if 0
++static int get_protection(void *addr, vm_prot_t *prot, vm_prot_t *max_prot) {
++  mach_port_t task = mach_task_self();
++  vm_size_t size = 0;
++  vm_address_t address = (vm_address_t)addr;
++  memory_object_name_t object;
++#ifdef __LP64__
++  mach_msg_type_number_t count = VM_REGION_BASIC_INFO_COUNT_64;
++  vm_region_basic_info_data_64_t info;
++  kern_return_t info_ret = vm_region_64(
++      task, &address, &size, VM_REGION_BASIC_INFO_64, (vm_region_info_64_t)&info, &count, &object);
++#else
++  mach_msg_type_number_t count = VM_REGION_BASIC_INFO_COUNT;
++  vm_region_basic_info_data_t info;
++  kern_return_t info_ret = vm_region(task, &address, &size, VM_REGION_BASIC_INFO, (vm_region_info_t)&info, &count, &object);
++#endif
++  if (info_ret == KERN_SUCCESS) {
++    if (prot != NULL)
++      *prot = info.protection;
++
++    if (max_prot != NULL)
++      *max_prot = info.max_protection;
++
++    return 0;
++  }
++
++  return -1;
++}
++#endif
++
+ static void perform_rebinding_with_section(struct rebindings_entry *rebindings,
+                                            section_t *section,
+                                            intptr_t slide,
+@@ -84,6 +119,7 @@ static void perform_rebinding_with_section(struct rebindings_entry *rebindings,
+                                            uint32_t *indirect_symtab) {
+   uint32_t *indirect_symbol_indices = indirect_symtab + section->reserved1;
+   void **indirect_symbol_bindings = (void **)((uintptr_t)slide + section->addr);
++
+   for (uint i = 0; i < section->size / sizeof(void *); i++) {
+     uint32_t symtab_index = indirect_symbol_indices[i];
+     if (symtab_index == INDIRECT_SYMBOL_ABS || symtab_index == INDIRECT_SYMBOL_LOCAL ||
+@@ -92,18 +128,33 @@ static void perform_rebinding_with_section(struct rebindings_entry *rebindings,
+     }
+     uint32_t strtab_offset = symtab[symtab_index].n_un.n_strx;
+     char *symbol_name = strtab + strtab_offset;
+-    if (strnlen(symbol_name, 2) < 2) {
+-      continue;
+-    }
++    bool symbol_name_longer_than_1 = symbol_name[0] && symbol_name[1];
+     struct rebindings_entry *cur = rebindings;
+     while (cur) {
+       for (uint j = 0; j < cur->rebindings_nel; j++) {
+-        if (strcmp(&symbol_name[1], cur->rebindings[j].name) == 0) {
+-          if (cur->rebindings[j].replaced != NULL &&
+-              indirect_symbol_bindings[i] != cur->rebindings[j].replacement) {
++        if (symbol_name_longer_than_1 && strcmp(&symbol_name[1], cur->rebindings[j].name) == 0) {
++          kern_return_t err;
++
++          if (cur->rebindings[j].replaced != NULL && indirect_symbol_bindings[i] != cur->rebindings[j].replacement)
+             *(cur->rebindings[j].replaced) = indirect_symbol_bindings[i];
++
++          /**
++           * 1. Moved the vm protection modifying codes to here to reduce the
++           *    changing scope.
++           * 2. Adding VM_PROT_WRITE mode unconditionally because vm_region
++           *    API on some iOS/Mac reports mismatch vm protection attributes.
++           * -- Lianfu Hao Jun 16th, 2021
++           **/
++          err = vm_protect (mach_task_self (), (uintptr_t)indirect_symbol_bindings, section->size, 0, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY);
++          if (err == KERN_SUCCESS) {
++            /**
++             * Once we failed to change the vm protection, we
++             * MUST NOT continue the following write actions!
++             * iOS 15 has corrected the const segments prot.
++             * -- Lionfore Hao Jun 11th, 2021
++             **/
++            indirect_symbol_bindings[i] = cur->rebindings[j].replacement;
+           }
+-          indirect_symbol_bindings[i] = cur->rebindings[j].replacement;
+           goto symbol_loop;
+         }
+       }
+@@ -187,6 +238,9 @@ int rebind_symbols_image(void *header,
+     struct rebindings_entry *rebindings_head = NULL;
+     int retval = prepend_rebindings(&rebindings_head, rebindings, rebindings_nel);
+     rebind_symbols_for_image(rebindings_head, (const struct mach_header *) header, slide);
++    if (rebindings_head) {
++      free(rebindings_head->rebindings);
++    }
+     free(rebindings_head);
+     return retval;
+ }
+diff --git a/node_modules/react-native/Libraries/fishhook/fishhook.h b/node_modules/react-native/Libraries/fishhook/fishhook.h
+index 0d8e36a..9521409 100755
+--- a/node_modules/react-native/Libraries/fishhook/fishhook.h
++++ b/node_modules/react-native/Libraries/fishhook/fishhook.h
+@@ -73,4 +73,3 @@ int rebind_symbols_image(void *header,
+ #endif //__cplusplus
+
+ #endif //fishhook_h
+-
+diff --git a/node_modules/react-native/React/.DS_Store b/node_modules/react-native/React/.DS_Store
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native/React/Base/RCTModuleMethod.mm b/node_modules/react-native/React/Base/RCTModuleMethod.mm
+index e121240..39a8d0c 100644
+--- a/node_modules/react-native/React/Base/RCTModuleMethod.mm
++++ b/node_modules/react-native/React/Base/RCTModuleMethod.mm
+@@ -91,6 +91,7 @@ static BOOL RCTParseSelectorPart(const char **input, NSMutableString *selector)
+ static BOOL RCTParseUnused(const char **input)
+ {
+   return RCTReadString(input, "__unused") ||
++         RCTReadString(input, "__attribute__((__unused__))") ||
+          RCTReadString(input, "__attribute__((unused))");
+ }
+
+diff --git a/node_modules/react-native/React/CxxBridge/RCTCxxBridge.mm b/node_modules/react-native/React/CxxBridge/RCTCxxBridge.mm
+index 87dca84..cbcf5c2 100644
+--- a/node_modules/react-native/React/CxxBridge/RCTCxxBridge.mm
++++ b/node_modules/react-native/React/CxxBridge/RCTCxxBridge.mm
+@@ -641,7 +641,7 @@ - (void)installExtraJSBinding
+   }
+ }
+
+-- (NSArray<RCTModuleData *> *)_initializeModules:(NSArray<id<RCTBridgeModule>> *)modules
++- (NSArray<RCTModuleData *> *)_initializeModules:(NSArray<Class> *)modules
+                                withDispatchGroup:(dispatch_group_t)dispatchGroup
+                                 lazilyDiscovered:(BOOL)lazilyDiscovered
+ {
+diff --git a/node_modules/react-native/React/Views/RCTWebView.m b/node_modules/react-native/React/Views/RCTWebView.m
+index 61042b2..d068583 100644
+--- a/node_modules/react-native/React/Views/RCTWebView.m
++++ b/node_modules/react-native/React/Views/RCTWebView.m
+@@ -33,319 +33,8 @@ @interface RCTWebView () <UIWebViewDelegate, RCTAutoInsetsProtocol>
+
+ @implementation RCTWebView
+ {
+-  UIWebView *_webView;
+-  NSString *_injectedJavaScript;
+-}
+-
+-- (void)dealloc
+-{
+-  _webView.delegate = nil;
+-}
+-
+-- (instancetype)initWithFrame:(CGRect)frame
+-{
+-  if ((self = [super initWithFrame:frame])) {
+-    super.backgroundColor = [UIColor clearColor];
+-    _automaticallyAdjustContentInsets = YES;
+-    _contentInset = UIEdgeInsetsZero;
+-    _webView = [[UIWebView alloc] initWithFrame:self.bounds];
+-    _webView.delegate = self;
+-#if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000 /* __IPHONE_11_0 */
+-    if ([_webView.scrollView respondsToSelector:@selector(setContentInsetAdjustmentBehavior:)]) {
+-      _webView.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+-    }
+-#endif
+-    [self addSubview:_webView];
+-  }
+-  return self;
+-}
+-
+-RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
+-
+-- (void)goForward
+-{
+-  [_webView goForward];
+-}
+-
+-- (void)goBack
+-{
+-  [_webView goBack];
+-}
+-
+-- (void)reload
+-{
+-  NSURLRequest *request = [RCTConvert NSURLRequest:self.source];
+-  if (request.URL && !_webView.request.URL.absoluteString.length) {
+-    [_webView loadRequest:request];
+-  }
+-  else {
+-    [_webView reload];
+-  }
+-}
+-
+-- (void)stopLoading
+-{
+-  [_webView stopLoading];
+-}
+-
+-- (void)postMessage:(NSString *)message
+-{
+-  NSDictionary *eventInitDict = @{
+-    @"data": message,
+-  };
+-  NSString *source = [NSString
+-    stringWithFormat:@"document.dispatchEvent(new MessageEvent('message', %@));",
+-    RCTJSONStringify(eventInitDict, NULL)
+-  ];
+-  [_webView stringByEvaluatingJavaScriptFromString:source];
+-}
+-
+-- (void)injectJavaScript:(NSString *)script
+-{
+-  [_webView stringByEvaluatingJavaScriptFromString:script];
+-}
+-
+-- (void)setSource:(NSDictionary *)source
+-{
+-  if (![_source isEqualToDictionary:source]) {
+-    _source = [source copy];
+-
+-    // Check for a static html source first
+-    NSString *html = [RCTConvert NSString:source[@"html"]];
+-    if (html) {
+-      NSURL *baseURL = [RCTConvert NSURL:source[@"baseUrl"]];
+-      if (!baseURL) {
+-        baseURL = [NSURL URLWithString:@"about:blank"];
+-      }
+-      [_webView loadHTMLString:html baseURL:baseURL];
+-      return;
+-    }
+-
+-    NSURLRequest *request = [RCTConvert NSURLRequest:source];
+-    // Because of the way React works, as pages redirect, we actually end up
+-    // passing the redirect urls back here, so we ignore them if trying to load
+-    // the same url. We'll expose a call to 'reload' to allow a user to load
+-    // the existing page.
+-    if ([request.URL isEqual:_webView.request.URL]) {
+-      return;
+-    }
+-    if (!request.URL) {
+-      // Clear the webview
+-      [_webView loadHTMLString:@"" baseURL:nil];
+-      return;
+-    }
+-    [_webView loadRequest:request];
+-  }
+-}
+-
+-- (void)layoutSubviews
+-{
+-  [super layoutSubviews];
+-  _webView.frame = self.bounds;
+-}
+-
+-- (void)setContentInset:(UIEdgeInsets)contentInset
+-{
+-  _contentInset = contentInset;
+-  [RCTView autoAdjustInsetsForView:self
+-                    withScrollView:_webView.scrollView
+-                      updateOffset:NO];
+-}
+-
+-- (void)setScalesPageToFit:(BOOL)scalesPageToFit
+-{
+-  if (_webView.scalesPageToFit != scalesPageToFit) {
+-    _webView.scalesPageToFit = scalesPageToFit;
+-    [_webView reload];
+-  }
+-}
+
+-- (BOOL)scalesPageToFit
+-{
+-  return _webView.scalesPageToFit;
+-}
+-
+-- (void)setBackgroundColor:(UIColor *)backgroundColor
+-{
+-  CGFloat alpha = CGColorGetAlpha(backgroundColor.CGColor);
+-  self.opaque = _webView.opaque = (alpha == 1.0);
+-  _webView.backgroundColor = backgroundColor;
+-}
+-
+-- (UIColor *)backgroundColor
+-{
+-  return _webView.backgroundColor;
+-}
+-
+-- (NSMutableDictionary<NSString *, id> *)baseEvent
+-{
+-  NSMutableDictionary<NSString *, id> *event = [[NSMutableDictionary alloc] initWithDictionary:@{
+-    @"url": _webView.request.URL.absoluteString ?: @"",
+-    @"loading" : @(_webView.loading),
+-    @"title": [_webView stringByEvaluatingJavaScriptFromString:@"document.title"],
+-    @"canGoBack": @(_webView.canGoBack),
+-    @"canGoForward" : @(_webView.canGoForward),
+-  }];
+-
+-  return event;
+-}
+-
+-- (void)refreshContentInset
+-{
+-  [RCTView autoAdjustInsetsForView:self
+-                    withScrollView:_webView.scrollView
+-                      updateOffset:YES];
+-}
+-
+-#pragma mark - UIWebViewDelegate methods
+-
+-- (BOOL)webView:(__unused UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request
+- navigationType:(UIWebViewNavigationType)navigationType
+-{
+-  BOOL isJSNavigation = [request.URL.scheme isEqualToString:RCTJSNavigationScheme];
+-
+-  static NSDictionary<NSNumber *, NSString *> *navigationTypes;
+-  static dispatch_once_t onceToken;
+-  dispatch_once(&onceToken, ^{
+-    navigationTypes = @{
+-      @(UIWebViewNavigationTypeLinkClicked): @"click",
+-      @(UIWebViewNavigationTypeFormSubmitted): @"formsubmit",
+-      @(UIWebViewNavigationTypeBackForward): @"backforward",
+-      @(UIWebViewNavigationTypeReload): @"reload",
+-      @(UIWebViewNavigationTypeFormResubmitted): @"formresubmit",
+-      @(UIWebViewNavigationTypeOther): @"other",
+-    };
+-  });
+-
+-  // skip this for the JS Navigation handler
+-  if (!isJSNavigation && _onShouldStartLoadWithRequest) {
+-    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+-    [event addEntriesFromDictionary: @{
+-      @"url": (request.URL).absoluteString,
+-      @"navigationType": navigationTypes[@(navigationType)]
+-    }];
+-    if (![self.delegate webView:self
+-      shouldStartLoadForRequest:event
+-                   withCallback:_onShouldStartLoadWithRequest]) {
+-      return NO;
+-    }
+-  }
+-
+-  if (_onLoadingStart) {
+-    // We have this check to filter out iframe requests and whatnot
+-    BOOL isTopFrame = [request.URL isEqual:request.mainDocumentURL];
+-    if (isTopFrame) {
+-      NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+-      [event addEntriesFromDictionary: @{
+-        @"url": (request.URL).absoluteString,
+-        @"navigationType": navigationTypes[@(navigationType)]
+-      }];
+-      _onLoadingStart(event);
+-    }
+-  }
+-
+-  if (isJSNavigation && [request.URL.host isEqualToString:kPostMessageHost]) {
+-    NSString *data = request.URL.query;
+-    data = [data stringByReplacingOccurrencesOfString:@"+" withString:@" "];
+-    data = [data stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+-
+-    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+-    [event addEntriesFromDictionary: @{
+-      @"data": data,
+-    }];
+-
+-    NSString *source = @"document.dispatchEvent(new MessageEvent('message:received'));";
+-
+-    [_webView stringByEvaluatingJavaScriptFromString:source];
+-
+-    _onMessage(event);
+-  }
+-
+-  // JS Navigation handler
+-  return !isJSNavigation;
+-}
+-
+-- (void)webView:(__unused UIWebView *)webView didFailLoadWithError:(NSError *)error
+-{
+-  if (_onLoadingError) {
+-    if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
+-      // NSURLErrorCancelled is reported when a page has a redirect OR if you load
+-      // a new URL in the WebView before the previous one came back. We can just
+-      // ignore these since they aren't real errors.
+-      // http://stackoverflow.com/questions/1024748/how-do-i-fix-nsurlerrordomain-error-999-in-iphone-3-0-os
+-      return;
+-    }
+-
+-    if ([error.domain isEqualToString:@"WebKitErrorDomain"] && error.code == 102) {
+-      // Error code 102 "Frame load interrupted" is raised by the UIWebView if
+-      // its delegate returns FALSE from webView:shouldStartLoadWithRequest:navigationType
+-      // when the URL is from an http redirect. This is a common pattern when
+-      // implementing OAuth with a WebView.
+-      return;
+-    }
+-
+-    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+-    [event addEntriesFromDictionary:@{
+-      @"domain": error.domain,
+-      @"code": @(error.code),
+-      @"description": error.localizedDescription,
+-    }];
+-    _onLoadingError(event);
+-  }
+ }
+
+-- (void)webViewDidFinishLoad:(UIWebView *)webView
+-{
+-  if (_messagingEnabled) {
+-    #if RCT_DEV
+-    // See isNative in lodash
+-    NSString *testPostMessageNative = @"String(window.postMessage) === String(Object.hasOwnProperty).replace('hasOwnProperty', 'postMessage')";
+-    BOOL postMessageIsNative = [
+-      [webView stringByEvaluatingJavaScriptFromString:testPostMessageNative]
+-      isEqualToString:@"true"
+-    ];
+-    if (!postMessageIsNative) {
+-      RCTLogError(@"Setting onMessage on a WebView overrides existing values of window.postMessage, but a previous value was defined");
+-    }
+-    #endif
+-    NSString *source = [NSString stringWithFormat:
+-      @"(function() {"
+-        "window.originalPostMessage = window.postMessage;"
+-
+-        "var messageQueue = [];"
+-        "var messagePending = false;"
+-
+-        "function processQueue() {"
+-          "if (!messageQueue.length || messagePending) return;"
+-          "messagePending = true;"
+-          "window.location = '%@://%@?' + encodeURIComponent(messageQueue.shift());"
+-        "}"
+-
+-        "window.postMessage = function(data) {"
+-          "messageQueue.push(String(data));"
+-          "processQueue();"
+-        "};"
+-
+-        "document.addEventListener('message:received', function(e) {"
+-          "messagePending = false;"
+-          "processQueue();"
+-        "});"
+-      "})();", RCTJSNavigationScheme, kPostMessageHost
+-    ];
+-    [webView stringByEvaluatingJavaScriptFromString:source];
+-  }
+-  if (_injectedJavaScript != nil) {
+-    NSString *jsEvaluationValue = [webView stringByEvaluatingJavaScriptFromString:_injectedJavaScript];
+-
+-    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
+-    event[@"jsEvaluationValue"] = jsEvaluationValue;
+-
+-    _onLoadingFinish(event);
+-  }
+-  // we only need the final 'finishLoad' call so only fire the event when we're actually done loading.
+-  else if (_onLoadingFinish && !webView.loading && ![webView.request.URL.absoluteString isEqualToString:@"about:blank"]) {
+-    _onLoadingFinish([self baseEvent]);
+-  }
+-}
+
+ @end
+diff --git a/node_modules/react-native/local-cli/.DS_Store b/node_modules/react-native/local-cli/.DS_Store
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native/local-cli/runIOS/findMatchingSimulator.js b/node_modules/react-native/local-cli/runIOS/findMatchingSimulator.js
+index 1928d6f..e6d014e 100644
+--- a/node_modules/react-native/local-cli/runIOS/findMatchingSimulator.js
++++ b/node_modules/react-native/local-cli/runIOS/findMatchingSimulator.js
+@@ -39,7 +39,8 @@ function findMatchingSimulator(simulators, simulatorString) {
+   var match;
+   for (let version in devices) {
+     // Making sure the version of the simulator is an iOS or tvOS (Removes Apple Watch, etc)
+-    if (!version.startsWith('iOS') && !version.startsWith('tvOS')) {
++    // if (!version.startsWith('iOS') && !version.startsWith('tvOS')) {
++    if (!version.startsWith('com.apple.CoreSimulator.SimRuntime.iOS') && !version.startsWith('com.apple.CoreSimulator.SimRuntime.tvOS')) {
+       continue;
+     }
+     if (simulatorVersion && !version.endsWith(simulatorVersion)) {
+@@ -50,7 +51,8 @@ function findMatchingSimulator(simulators, simulatorString) {
+       // Skipping non-available simulator
+       if (
+         simulator.availability !== '(available)' &&
+-        simulator.isAvailable !== 'YES'
++        simulator.isAvailable !== 'YES' &&
++        simulator.isAvailable !== true
+       ) {
+         continue;
+       }
+diff --git a/node_modules/react-native/local-cli/runIOS/runIOS.js b/node_modules/react-native/local-cli/runIOS/runIOS.js
+index 4fa7f4c..5c5b7f0 100644
+--- a/node_modules/react-native/local-cli/runIOS/runIOS.js
++++ b/node_modules/react-native/local-cli/runIOS/runIOS.js
+@@ -73,7 +73,7 @@ function runIOS(argv, config, args) {
+     }`,
+   );
+   const devices = parseIOSDevicesList(
+-    child_process.execFileSync('xcrun', ['instruments', '-s'], {
++    child_process.execFileSync('xcrun', ['xctrace', 'list', 'devices'], {
+       encoding: 'utf8',
+     }),
+   );
+diff --git a/node_modules/react-native/scripts/.packager.env b/node_modules/react-native/scripts/.packager.env
+new file mode 100644
+index 0000000..21a13cf
+--- /dev/null
++++ b/node_modules/react-native/scripts/.packager.env
+@@ -0,0 +1 @@
++export RCT_METRO_PORT=8081
+\ No newline at end of file

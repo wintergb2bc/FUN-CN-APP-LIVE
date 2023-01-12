@@ -1,0 +1,372 @@
+diff --git a/node_modules/sbtech-sports-data-api-client/lib/RNEventSource.android.js b/node_modules/sbtech-sports-data-api-client/lib/RNEventSource.android.js
+new file mode 100644
+index 0000000..8c0b573
+--- /dev/null
++++ b/node_modules/sbtech-sports-data-api-client/lib/RNEventSource.android.js
+@@ -0,0 +1,2 @@
++import EventSource from "@gpsgate/react-native-eventsource";
++export default EventSource;
+\ No newline at end of file
+diff --git a/node_modules/sbtech-sports-data-api-client/lib/RNEventSource.ios.js b/node_modules/sbtech-sports-data-api-client/lib/RNEventSource.ios.js
+new file mode 100644
+index 0000000..5c57cc1
+--- /dev/null
++++ b/node_modules/sbtech-sports-data-api-client/lib/RNEventSource.ios.js
+@@ -0,0 +1,234 @@
++// EventSource.js
++// Original implementation from
++// https://github.com/remy/polyfills/blob/master/EventSource.js
++//
++// Copyright (c) 2010 Remy Sharp, http://remysharp.com
++
++var reTrim = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
++
++var EventSource = function(url, options) {
++  //console.log('===eventsource init',url,JSON.stringify(options));
++
++  var eventsource = this,
++    interval = 500, // polling interval
++    lastEventId = null,
++    lastIndexProcessed = 0,
++    eventType;
++
++  if (!url || typeof url != 'string') {
++    throw new SyntaxError('Not enough arguments');
++  }
++
++  this.URL = url;
++  this.OPTIONS = options || {};
++  this.readyState = this.CONNECTING;
++  this._pollTimer = null;
++  this._xhr = null;
++
++  function pollAgain(interval) {
++    eventsource._pollTimer = setTimeout(function() {
++      poll.call(eventsource);
++    }, interval);
++  }
++
++  function poll() {
++    try {
++      // force hiding of the error message... insane?
++      if (eventsource.readyState == eventsource.CLOSED) return;
++
++      // NOTE: IE7 and upwards support
++      var xhr = new XMLHttpRequest();
++      xhr.open(eventsource.OPTIONS.method || 'GET', eventsource.URL, true);
++      if (eventsource.OPTIONS && eventsource.OPTIONS.headers) {
++        Object.keys(eventsource.OPTIONS.headers).forEach(key => {
++          xhr.setRequestHeader(key, eventsource.OPTIONS.headers[key]);
++        });
++      }
++      xhr.setRequestHeader('Accept', 'text/event-stream');
++      xhr.setRequestHeader('Cache-Control', 'no-cache');
++      // we must make use of this on the server side if we're working with Android - because they don't trigger
++      // readychange until the server connection is closed
++      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
++
++      if (lastEventId != null)
++        xhr.setRequestHeader('Last-Event-ID', lastEventId);
++      lastIndexProcessed = 0;
++
++      xhr.timeout =
++        this.OPTIONS && this.OPTIONS.timeout !== undefined
++          ? this.OPTIONS.timeout
++          : 50000;
++
++      xhr.onreadystatechange = function() {
++        if (
++          this.readyState == 3 ||
++          (this.readyState == 4 && this.status == 200)
++        ) {
++          // on success
++          if (eventsource.readyState == eventsource.CONNECTING) {
++            eventsource.readyState = eventsource.OPEN;
++            eventsource.dispatchEvent('open', { type: 'open' });
++          }
++
++          var responseText = '';
++          try {
++            responseText = this.responseText || '';
++          } catch (e) {}
++
++          // process this.responseText
++          var parts = responseText.substr(lastIndexProcessed).split('\n'),
++            data = [],
++            i = 0,
++            retry = 0,
++            line = '';
++          lastIndexProcessed = responseText.lastIndexOf('\n\n') + 2;
++
++          // TODO handle 'event' (for buffer name), retry
++          for (; i < parts.length; i++) {
++            line = parts[i].replace(reTrim, '');
++            if (line.indexOf('event') == 0) {
++              eventType = line.replace(/event:?\s*/, '');
++            } else if (line.indexOf('retry') == 0) {
++              retry = parseInt(line.replace(/retry:?\s*/, ''));
++              if (!isNaN(retry)) {
++                interval = retry;
++              }
++            } else if (line.indexOf('data') == 0) {
++              data.push(line.replace(/data:?\s*/, ''));
++            } else if (line.indexOf('id:') == 0) {
++              lastEventId = line.replace(/id:?\s*/, '');
++            } else if (line.indexOf('id') == 0) {
++              // this resets the id
++              lastEventId = null;
++            } else if (line == '') {
++              if (data.length) {
++                let thisEventType = eventType || 'message';
++                var event = new MessageEvent(
++                  data.join('\n'),
++                  eventsource.url,
++                  lastEventId,
++                  thisEventType,
++                );
++                event.type = thisEventType;
++                eventsource.dispatchEvent(thisEventType, event);
++                data = [];
++                eventType = undefined;
++              }
++            }
++          }
++
++          if (this.readyState == 4) pollAgain(interval);
++
++          // don't need to poll again, because we're long-loading
++        } else if (eventsource.readyState !== eventsource.CLOSED) {
++          if (this.readyState == 4) {
++            // and some other status
++            pollAgain(interval);
++          } else if (this.readyState == 0) {
++            // likely aborted
++            pollAgain(interval);
++          }
++        }
++      };
++
++      xhr.onerror = function(e) {
++        console.log('===eventsource xhr onerror',e);
++
++        // dispatch error
++        eventsource.readyState = eventsource.CONNECTING;
++
++        eventsource.dispatchEvent('error', {
++          type: 'error',
++          message: this.responseText,
++        });
++      };
++
++      if (eventsource.OPTIONS.body) {
++        xhr.send(eventsource.OPTIONS.body);
++      } else {
++        xhr.send();
++      }
++
++      if (xhr.timeout > 0) {
++        setTimeout(function() {
++          if (true || xhr.readyState == 3) xhr.abort();
++        }, xhr.timeout);
++      }
++
++      eventsource._xhr = xhr;
++    } catch (e) {
++      console.log('===eventsource xhr exception',e);
++      // in an attempt to silence the errors
++      eventsource.dispatchEvent('error', { type: 'error', data: e.message }); // ???
++    }
++  }
++
++  poll(); // init now
++};
++
++EventSource.prototype = {
++  close: function() {
++    // closes the connection - disabling the polling
++    this.readyState = this.CLOSED;
++    clearInterval(this._pollTimer);
++    this._xhr && this._xhr.abort();
++  },
++  CONNECTING: 0,
++  OPEN: 1,
++  CLOSED: 2,
++  dispatchEvent: function(type, event) {
++    //console.log('===eventsource xhr dispatchEvent',type,event);
++    var handlers = this['_' + type + 'Handlers'];
++    if (handlers) {
++      for (var i = 0; i < handlers.length; i++) {
++        //console.log('===eventsource xhr dispatchEvent call handler',type,event);
++        handlers[i].call(this, event);
++      }
++    }
++
++    if (this['on' + type]) {
++      //console.log('===eventsource xhr dispatchEvent call onType',type,event);
++      this['on' + type].call(this, event);
++    }
++  },
++  addEventListener: function(type, handler) {
++    if (!this['_' + type + 'Handlers']) {
++      this['_' + type + 'Handlers'] = [];
++    }
++
++    this['_' + type + 'Handlers'].push(handler);
++  },
++  removeEventListener: function(type, handler) {
++    var handlers = this['_' + type + 'Handlers'];
++    if (!handlers) {
++      return;
++    }
++    for (var i = handlers.length - 1; i >= 0; --i) {
++      if (handlers[i] === handler) {
++        handlers.splice(i, 1);
++        break;
++      }
++    }
++  },
++  onerror: null,
++  onmessage: null,
++  onopen: null,
++  readyState: 0,
++  URL: '',
++};
++
++var MessageEvent = function(data, origin, lastEventId, eventType) {
++  this.data = data;
++  this.origin = origin;
++  this.lastEventId = lastEventId || '';
++  this.type = eventType;
++};
++
++MessageEvent.prototype = {
++  data: null,
++  type: 'message',
++  lastEventId: '',
++  origin: '',
++};
++
++export default EventSource;
+\ No newline at end of file
+diff --git a/node_modules/sbtech-sports-data-api-client/lib/api.js b/node_modules/sbtech-sports-data-api-client/lib/api.js
+index df23a51..ef41d5a 100644
+--- a/node_modules/sbtech-sports-data-api-client/lib/api.js
++++ b/node_modules/sbtech-sports-data-api-client/lib/api.js
+@@ -252,12 +252,15 @@ function subscribe(endpoint, config, queryString, onNext, onError, format) {
+     var getToken = function () { return sbtech_general_api_client_1.tokenService.apiAccessToken; };
+     var queryUrl = (config.sportsApiPushUrl || config.sportsApiUrl) + "/stream/" + endpoint + queryString + "&jwt=" + JWT_PLACEHOLDER;
+     var handleMessage = function (rawData) {
++        //console.log('===eventsource api handleMessage',rawData);
+         if (format == query_1.Format.Msgpack) {
+             var response = decodePushResponse(rawData, endpoint);
++            //console.log('===eventsource api handleMessage response',response);
+             onNext(response);
+         }
+         else {
+             var payload = JSON.parse(rawData);
++            //console.log('===eventsource api handleMessage payload',payload);
+             onNext(payload);
+         }
+     };
+@@ -279,12 +282,15 @@ var SseSubscription = /** @class */ (function () {
+         }
+         this.eventSource = new reconnecting_eventsource_1.ReconnectingEventSource(this.getUrl());
+         this.eventSource.addEventListener("push", function (e) {
++            //console.log('=====sport api get push',e.data);
+             _this.onNext(e.data);
+         }, false);
+         this.eventSource.addEventListener("update", function (e) {
++            //console.log('=====sport api get update',e.data);
+             _this.onNext(e.data);
+         }, false);
+         this.eventSource.addEventListener("snapshot", function (e) {
++            //console.log('=====sport api get snapshot',e.data);
+             _this.onNext(e.data);
+         }, false);
+         this.eventSource.onerror = function (e) {
+diff --git a/node_modules/sbtech-sports-data-api-client/lib/polyfill.js b/node_modules/sbtech-sports-data-api-client/lib/polyfill.js
+index e99942f..c307868 100644
+--- a/node_modules/sbtech-sports-data-api-client/lib/polyfill.js
++++ b/node_modules/sbtech-sports-data-api-client/lib/polyfill.js
+@@ -1,3 +1,2 @@
+-var eventSourceLib = require('event-source-polyfill');
+-window.EventSource = eventSourceLib.NativeEventSource || eventSourceLib.EventSourcePolyfill;
++//var RNEventSource = require('./RNEventSource')
+ //# sourceMappingURL=polyfill.js.map
+\ No newline at end of file
+diff --git a/node_modules/sbtech-sports-data-api-client/lib/query.js b/node_modules/sbtech-sports-data-api-client/lib/query.js
+index 0bbcaf3..3e86741 100644
+--- a/node_modules/sbtech-sports-data-api-client/lib/query.js
++++ b/node_modules/sbtech-sports-data-api-client/lib/query.js
+@@ -40,7 +40,12 @@ var Query = /** @class */ (function () {
+         var format = query.format ? "&format=" + query.format : "";
+         var locale = "&locale=" + (query.locale || defaultLocale);
+         var projection = query.params["projection"] ? "&projection=" + query.params["projection"] : "";
+-        var queryUrl = "?query=" + encodeURIComponent(query.query) + projection + includeMarketsParam + locale + fromParam + timeRangeParam + initialData + untilParam + format;
++        let queryValue = encodeURIComponent(query.query);
++        let queryBlock =  "?query=" + queryValue;
++        if (!queryValue || queryValue.length <= 0)  {
++            queryBlock = "?"; //query如果為空就不要帶，不然會報錯
++        }
++        var queryUrl = queryBlock + projection + includeMarketsParam + locale + fromParam + timeRangeParam + initialData + untilParam + format;
+         return queryUrl;
+     };
+     Query.validate = function (query) {
+diff --git a/node_modules/sbtech-sports-data-api-client/lib/reconnecting-eventsource.js b/node_modules/sbtech-sports-data-api-client/lib/reconnecting-eventsource.js
+index 8d2a571..5cd4f6d 100644
+--- a/node_modules/sbtech-sports-data-api-client/lib/reconnecting-eventsource.js
++++ b/node_modules/sbtech-sports-data-api-client/lib/reconnecting-eventsource.js
+@@ -1,5 +1,6 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
++import RNEventSource from './RNEventSource';
+ var ReconnectingEventSource = /** @class */ (function () {
+     function ReconnectingEventSource(url, configuration) {
+         var _this = this;
+@@ -24,6 +25,7 @@ var ReconnectingEventSource = /** @class */ (function () {
+         this._start();
+     }
+     ReconnectingEventSource.prototype._start = function () {
++        //console.log('===eventsource start',this);
+         var _this = this;
+         var url = this.url;
+         if (this._lastEventId) {
+@@ -35,7 +37,7 @@ var ReconnectingEventSource = /** @class */ (function () {
+             }
+             url += 'lastEventId=' + encodeURIComponent(this._lastEventId);
+         }
+-        this._eventSource = new EventSource(url, this._configuration);
++        this._eventSource = new RNEventSource(url, this._configuration);
+         this._eventSource.onopen = function (event) { _this._onopen(event); };
+         this._eventSource.onerror = function (event) { _this._onerror(event); };
+         for (var _i = 0, _a = Object.keys(this._listeners); _i < _a.length; _i++) {
+@@ -44,6 +46,7 @@ var ReconnectingEventSource = /** @class */ (function () {
+         }
+     };
+     ReconnectingEventSource.prototype._onopen = function (event) {
++        //console.log('===eventsource open',event);
+         if (this.readyState === this.CONNECTING) {
+             this.readyState = this.OPEN;
+             this.retryCount = 0;
+@@ -51,6 +54,8 @@ var ReconnectingEventSource = /** @class */ (function () {
+         }
+     };
+     ReconnectingEventSource.prototype._onerror = function (event) {
++        //console.log('===eventsource onerror',event);
++
+         var _this = this;
+         var prevState = this.readyState;
+         if (this.readyState === this.OPEN) {
+diff --git a/node_modules/sbtech-sports-data-api-client/webpack.config.js b/node_modules/sbtech-sports-data-api-client/webpack.config.js
+index 15e9933..5996561 100644
+--- a/node_modules/sbtech-sports-data-api-client/webpack.config.js
++++ b/node_modules/sbtech-sports-data-api-client/webpack.config.js
+@@ -8,7 +8,7 @@ module.exports = function (env) {
+     const isProd = nodeEnv === 'production';
+     const plugins = [
+         new webpack.ProvidePlugin({
+-            'window.fetch': "imports-loader?this=>global!exports-loader?global.fetch!whatwg-fetch",
++            'fetch': "imports-loader?this=>global!exports-loader?global.fetch!whatwg-fetch",
+ 	    'Promise': "imports-loader?this=>global!exports-loader?global.Promise!core-js/es/promise",
+         }),
+         new webpack.DefinePlugin({
